@@ -12,7 +12,8 @@ addfile() {
     local targetfile="$(realpath "$2")"
 
     if ! [ -e "$targetfile" ]; then
-        echo "target $targetfile does not exist"
+        echo "target $2 does not exist"
+        return 1
     fi
 
     local passfile="$PREFIX/$path.file.gpg"
@@ -22,7 +23,10 @@ addfile() {
     if [ -e "$passfile" ]; then
         yesno "file $path already exists, overwrite?"
     fi
-    # TODO: check for large file size
+
+    if [ "$(du -s "$targetfile" | grep -o '^[0-9]*')" -gt 10000 ]; then
+        yesno "file $2 has a size of $(du -sh "$2" | cut -f -1). pass and git are not meant as a storage for large binaries. Continue regardless?"
+    fi
 
     mkdir -p -v "$PREFIX/$(dirname "$path")"
     set_gpg_recipients "$(dirname "$path")"
